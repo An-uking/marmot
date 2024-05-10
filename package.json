@@ -1,0 +1,36 @@
+{
+    "name": "@uking/marmot",
+    "version": "1.0.7",
+    "description": "A lightweight and fast javascript native template rendering engine that supports browsers, FibJS and NodeJS.",
+    "repository": "https://github.com/An-uking/marmot.git",
+    "scripts": {
+        "build": "rollup -c"
+    },
+    "main": "dist/index.js",
+    "type": "module",
+    "keywords": [
+        "web",
+        "html",
+        "javascript",
+        "component",
+        "native",
+        "template",
+        "render",
+        "browser",
+        "FibJS",
+        "NodeJS"
+    ],
+    "devDependencies": {
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@rollup/plugin-terser": "^0.4.4",
+        "rollup": "^4.17.2",
+        "terser": "^5.31.0"
+    },
+    "author": "uking <<ptvile@live.com>>",
+    "license": "MIT",
+    "publisher": "uking",
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org"
+    }
+}
