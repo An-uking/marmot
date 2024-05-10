@@ -1,6 +1,6 @@
 {
     "name": "@uking/marmot",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "A lightweight and fast javascript native template rendering engine that supports browsers, FibJS and NodeJS.",
     "repository": "https://github.com/An-uking/marmot.git",
     "scripts": {

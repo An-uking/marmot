@@ -114,7 +114,9 @@ function _renderToString(arr, values, components, slots) {
                     } else {
                         let myComponent = new MyComponent()
                         html += render(myComponent.render(props), myComponent.components(), slots)
-                        strings[0] = strings[0].substring(endTagPosition + 2)
+                        strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 2)
+                        strings.splice(0, currentIndex)
+                        values.splice(0, currentIndex)
                     }
                 }
             }
