@@ -8,14 +8,14 @@
  * @license MIT
  */
 const html = (strings, ...values) => ({ strings, values })
-const reservedKeys = ['Template', 'Slot']
+// const reservedKeys = ['Template', 'Slot']
 
 class Component {
     constructor(props) {
         this.props = props
         let name = this.constructor.name
-        if (reservedKeys.includes(name)) {
-            throw new Error(`Component ${name} is a reserved keyword and cannot be used as a component name.`)
+        if (['Template', 'Slot'].includes(name)) {
+            throw new Error(`Component ${name} is a reserved keyword.`)
         }
 
     }
@@ -37,7 +37,9 @@ const render = (node, components, slots) => {
 
 function _renderToString(arr, values, components, slots) {
     let strings = arr.slice(0)
+    arr = []
     let html = ''
+    components = components || {}
     slots = slots || {}
     while (strings.length) {
         let matchComponents = strings[0].match(componentNameRegExp)
@@ -50,13 +52,21 @@ function _renderToString(arr, values, components, slots) {
                 html += strings[0].substring(0, beginPosition)
                 strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
                 let endTagOffset = -1
-                let {
-                    props,
-                    currentIndex,
-                    endTagPosition,
-                    isCloseTag
-                } = findComponentAttributes(strings, values)
-                if (!isCloseTag) {
+                let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
+                if (isCloseTag) {
+                    endTagOffset = endTagPosition + 2
+                    if (componentName === 'Slot') {
+                        if (props.name) {
+                            html += slots[props.name] || ''
+                            slots[props.name] = ''
+                        } else {
+                            html += slots.default || ''
+                            slots['default'] = ''
+                        }
+                    } else
+                        html += _renderComponent(componentName, components, props, slots)
+
+                } else {
                     strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 1)
                     strings.splice(0, currentIndex)
                     values.splice(0, currentIndex)
@@ -71,20 +81,6 @@ function _renderToString(arr, values, components, slots) {
                     slots[slotName] = _renderToString(arr, val, components, slots)
                     if (componentName !== 'Template') html += _renderComponent(componentName, components, props, slots)
                     j += length
-                } else {
-                    endTagOffset = endTagPosition + 2
-                    let isSlot = componentName === 'Slot'
-                    if (isSlot) {
-                        if (props.name) {
-                            html += slots[props.name] || ''
-                            slots[props.name] = ''
-                        } else {
-                            html += slots.default || ''
-                            slots['default'] = ''
-                        }
-                    } else
-                        html += _renderComponent(componentName, components, props, slots)
-
                 }
                 strings[currentIndex] = strings[currentIndex].substring(endTagOffset)
                 strings.splice(0, currentIndex)
@@ -94,15 +90,15 @@ function _renderToString(arr, values, components, slots) {
         } else {
             strings[0] = strings[0].replace(/\n\s+/g, '')
             html += strings[0]
-            strings.splice(0, 1)
             if (values[0]) {
                 if (Array.isArray(values[0])) {
                     html += values[0].join('')
                 } else {
                     html += values[0]
                 }
-                values.splice(0, 1)
             }
+            strings.splice(0, 1)
+            values.splice(0, 1)
         }
     }
     return html
@@ -125,7 +121,6 @@ function findComponentEndTagPosition(componentName, strings) {
     for (let i = 0; i < strLen; i++) {
         let line = strings[i]
         offset = line.indexOf(componentName)
-        // index = i
         let flag = offset > -1
         let str = line
         if (flag) {
