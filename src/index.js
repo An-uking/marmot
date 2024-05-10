@@ -2,7 +2,7 @@
  * [@uking/marmot]{@link https://github.com/An-uking/marmot.git}
  *
  * @namespace marmot
- * @version 1.0.7
+ * @version 1.1.0
  * @author uking [ptvile@live.com]
  * @copyright uking 2024
  * @license MIT
@@ -28,7 +28,7 @@ class Component {
 }
 
 // const pattern = /<(?!Slot|Template)([A-Z][A-Za-z]*)/g
-const componentNameRegExp = /<([A-Z][A-Za-z0-9]*)/g
+const componentNameRegExp = /<([A-Z]\w*)/g
 const render = (node, components, slots) => {
     let { strings, values } = node
     if (!strings) return ''
@@ -50,7 +50,12 @@ function _renderToString(arr, values, components, slots) {
                 html += strings[0].substring(0, beginPosition)
                 strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
                 let endTagOffset = -1
-                let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
+                let {
+                    props,
+                    currentIndex,
+                    endTagPosition,
+                    isCloseTag
+                } = findComponentAttributes(strings, values)
                 if (!isCloseTag) {
                     strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 1)
                     strings.splice(0, currentIndex)
@@ -62,17 +67,9 @@ function _renderToString(arr, values, components, slots) {
                     arr[index] = arr[index].substring(0, offset)
                     currentIndex = index
                     endTagOffset = offset + componentEndTag.length
-                    let isTemplate = componentName === 'Template'
                     let slotName = props.slot || 'default'
                     slots[slotName] = _renderToString(arr, val, components, slots)
-                    if (!isTemplate) {
-                        let MyComponent = components[componentName]
-                        if (!MyComponent) {
-                            throw new Error(`Component ${componentName} not found.`)
-                        }
-                        let myComponent = new MyComponent()
-                        html += render(myComponent.render(props), myComponent.components(), slots)
-                    }
+                    if (componentName !== 'Template') html += _renderComponent(componentName, components, props, slots)
                     j += length
                 } else {
                     endTagOffset = endTagPosition + 2
@@ -85,14 +82,9 @@ function _renderToString(arr, values, components, slots) {
                             html += slots.default || ''
                             slots['default'] = ''
                         }
-                    } else {
-                        let MyComponent = components[componentName]
-                        if (!MyComponent) {
-                            throw new Error(`Component ${componentName} not found.`)
-                        }
-                        let myComponent = new MyComponent()
-                        html += render(myComponent.render(props), myComponent.components(), slots)
-                    }
+                    } else
+                        html += _renderComponent(componentName, components, props, slots)
+
                 }
                 strings[currentIndex] = strings[currentIndex].substring(endTagOffset)
                 strings.splice(0, currentIndex)
@@ -114,6 +106,13 @@ function _renderToString(arr, values, components, slots) {
         }
     }
     return html
+}
+
+function _renderComponent(name, components, props, slots) {
+    let MyComponent = components[name]
+    if (!MyComponent) throw new Error(`Component ${name} not found.`)
+    let myComponent = new MyComponent()
+    return render(myComponent.render(props), myComponent.components(), slots)
 }
 
 function findComponentEndTagPosition(componentName, strings) {
