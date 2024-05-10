@@ -9,6 +9,7 @@
  */
 const html = (strings, ...values) => ({ strings, values })
 const reservedKeys = ['Template', 'Slot']
+
 class Component {
     constructor(props) {
         this.props = props
@@ -26,6 +27,7 @@ class Component {
     }
 }
 
+// const pattern = /<(?!Slot|Template)([A-Z][A-Za-z]*)/g
 const componentNameRegExp = /<([A-Z][A-Za-z0-9]*)/g
 const render = (node, components, slots) => {
     let { strings, values } = node
@@ -46,79 +48,55 @@ function _renderToString(arr, values, components, slots) {
                 let componentName = matchComponents[j].replace('<', '')
                 let beginPosition = strings[0].indexOf(matchComponents[j])
                 html += strings[0].substring(0, beginPosition)
-                if (componentName === 'Template') {
-                    strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
-                    let {
-                        props,
-                        currentIndex,
-                        endTagPosition
-                    } = findComponentAttributes(strings, values)
+                strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
+                let endTagOffset = -1
+                let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
+                if (!isCloseTag) {
                     strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 1)
                     strings.splice(0, currentIndex)
                     values.splice(0, currentIndex)
-                    let componentEndTag = `</Template>`
+                    let componentEndTag = `</${componentName}>`
                     let { index, offset, length } = findComponentEndTagPosition(componentEndTag, strings)
                     let arr = strings.slice(0, index + 1)
                     let val = values.slice(0, index)
                     arr[index] = arr[index].substring(0, offset)
-                    slots[props.slot] = _renderToString(arr, val, components, slots)
-                    strings[index] = strings[index].substring(offset + componentEndTag.length)
-                    strings.splice(0, index)
-                    values.splice(0, index)
+                    currentIndex = index
+                    endTagOffset = offset + componentEndTag.length
+                    let isTemplate = componentName === 'Template'
+                    let slotName = props.slot || 'default'
+                    slots[slotName] = _renderToString(arr, val, components, slots)
+                    if (!isTemplate) {
+                        let MyComponent = components[componentName]
+                        if (!MyComponent) {
+                            throw new Error(`Component ${componentName} not found.`)
+                        }
+                        let myComponent = new MyComponent()
+                        html += render(myComponent.render(props), myComponent.components(), slots)
+                    }
                     j += length
-                } else if (componentName === 'Slot') {
-                    let tagLen = beginPosition + matchComponents[j].length
-                    strings[0] = strings[0].substring(tagLen)
-                    let {
-                        props,
-                        currentIndex,
-                        endTagPosition
-                    } = findComponentAttributes(strings, values)
-                    if (props.name) {
-                        html += slots[props.name] || ''
-                        slots[props.name] = ''
-                    } else {
-                        html += slots.default || ''
-                        slots['default'] = ''
-                    }
-                    strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 2)
-                    strings.splice(0, currentIndex)
-                    values.splice(0, currentIndex)
                 } else {
-                    //自定义组件
-                    let MyComponent = components[componentName]
-                    if (!MyComponent) {
-                        throw new Error(`Component ${componentName} not found.`)
-                    }
-                    strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
-                    let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
-                    if (!isCloseTag) {
-                        strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 1)
-                        strings.splice(0, currentIndex)
-                        values.splice(0, currentIndex)
-                        //查找自定义组件的结束标签
-                        let componentEndTag = `</${componentName}>`
-                        let { index, offset, length } = findComponentEndTagPosition(componentEndTag, strings)
-                        let arr = strings.slice(0, index + 1)
-                        let val = values.slice(0, index)
-                        arr[index] = arr[index].substring(0, offset)
-                        slots['default'] = _renderToString(arr, val, components, slots)
-                        let myComponent = new MyComponent()
-                        html += render(myComponent.render(props), myComponent.components(), slots)
-                        //删除已经渲染的自定义组件标签
-                        strings[index] = strings[index].substring(offset + componentEndTag.length)
-                        strings.splice(0, index)
-                        values.splice(0, index)
-                        j += length
-
+                    endTagOffset = endTagPosition + 2
+                    let isSlot = componentName === 'Slot'
+                    if (isSlot) {
+                        if (props.name) {
+                            html += slots[props.name] || ''
+                            slots[props.name] = ''
+                        } else {
+                            html += slots.default || ''
+                            slots['default'] = ''
+                        }
                     } else {
+                        let MyComponent = components[componentName]
+                        if (!MyComponent) {
+                            throw new Error(`Component ${componentName} not found.`)
+                        }
                         let myComponent = new MyComponent()
                         html += render(myComponent.render(props), myComponent.components(), slots)
-                        strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 2)
-                        strings.splice(0, currentIndex)
-                        values.splice(0, currentIndex)
                     }
                 }
+                strings[currentIndex] = strings[currentIndex].substring(endTagOffset)
+                strings.splice(0, currentIndex)
+                values.splice(0, currentIndex)
             }
 
         } else {
@@ -241,7 +219,7 @@ function getBooleanAttributes(htmlString, props = {}) {
     return props;
 }
 
-export {
+module.exports = {
     render,
     Component,
     html
