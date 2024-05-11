@@ -2,7 +2,7 @@
  * [@uking/marmot]{@link https://github.com/An-uking/marmot.git}
  *
  * @namespace marmot
- * @version 1.1.3
+ * @version 1.1.4
  * @author uking [ptvile@live.com]
  * @copyright uking 2024
  * @license MIT
