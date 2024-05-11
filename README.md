@@ -71,7 +71,7 @@ const com = new Page()
 const res = com.render(props)
 console.log(res)
 
-// with context
+// with context, the context can be passed to child components
 
 const ctx = {
   a:1,
@@ -83,8 +83,8 @@ console.log(str)
 // or
 
 const com2 = new Page(ctx)
-const res2 = com.render(props)
-console.log(res)
+const res2 = com2.render(props)
+console.log(res2)
 
 
 ```
