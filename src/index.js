@@ -2,7 +2,7 @@
  * [@uking/marmot]{@link https://github.com/An-uking/marmot.git}
  *
  * @namespace marmot
- * @version 1.1.1
+ * @version 1.1.2
  * @author uking [ptvile@live.com]
  * @copyright uking 2024
  * @license MIT
@@ -31,11 +31,11 @@ class Component {
     }
 }
 
-const html = (strings, ...values) => ({strings, values})
+const html = (strings, ...values) => ({ strings, values })
 
 
 const render = (node, components, slots, context) => {
-    let {strings, values} = node
+    let { strings, values } = node
     let sLen = strings.length
     let vLen = values.length
     if (!Array.isArray(values) || !Array.isArray(strings)) return ''
@@ -61,7 +61,7 @@ function _renderToString(arr, values, components, slots, context) {
                 html += strings[0].substring(0, beginPosition)
                 strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
                 let endTagOffset = -1
-                let {props, currentIndex, endTagPosition, isCloseTag} = findComponentAttributes(strings, values)
+                let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
                 if (isCloseTag) {
                     endTagOffset = endTagPosition + 2
                     if (componentName === 'Slot') {
@@ -80,7 +80,7 @@ function _renderToString(arr, values, components, slots, context) {
                     strings.splice(0, currentIndex)
                     values.splice(0, currentIndex)
                     let componentEndTag = `</${componentName}>`
-                    let {index, offset, length} = findComponentEndTagPosition(componentEndTag, strings)
+                    let { index, offset, length } = findComponentEndTagPosition(componentEndTag, strings)
                     let arr = strings.slice(0, index + 1)
                     let val = values.slice(0, index)
                     arr[index] = arr[index].substring(0, offset)
@@ -146,7 +146,7 @@ function findComponentEndTagPosition(componentName, strings) {
 
         if (flag) break
     }
-    return {index, offset, length}
+    return { index, offset, length }
 }
 
 function findComponentAttributes(strings, values) {
@@ -175,7 +175,7 @@ function findComponentAttributes(strings, values) {
             attrKey && !props[attrKey] && (props[attrKey] = values[i])
         }
     }
-    return {props, currentIndex, endTagPosition, isCloseTag}
+    return { props, currentIndex, endTagPosition, isCloseTag }
 }
 
 /**
@@ -184,7 +184,7 @@ function findComponentAttributes(strings, values) {
  * @param props
  * @returns {{}}
  */
-function getStaticAttributes(htmlString, props ) {
+function getStaticAttributes(htmlString, props) {
     props = props || {}
     const regex = /([\w-]+)\s*=\s*(['"])(.*?)\2/g;
     let match;
@@ -212,7 +212,7 @@ function getDynamicAttributesKey(htmlString) {
  * @param props
  * @returns {Object}
  */
-function getBooleanAttributes(htmlString, props ) {
+function getBooleanAttributes(htmlString, props) {
     props = props || {}
     const regex = /(^|\s)(\w+)(?=\s|$)/g
     let match;
