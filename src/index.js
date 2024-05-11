@@ -36,9 +36,9 @@ const html = (strings, ...values) => ({ strings, values })
 
 const render = (node, components, slots, context) => {
     let { strings, values } = node
+    if (!Array.isArray(values) || !Array.isArray(strings)) return ''
     let sLen = strings.length
     let vLen = values.length
-    if (!Array.isArray(values) || !Array.isArray(strings)) return ''
     if (sLen !== vLen + 1) return ''
     return _renderToString(strings, values, components, slots, context)
 }
