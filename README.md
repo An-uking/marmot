@@ -61,6 +61,14 @@ class Page extends Component {
 const data = ['test1','test2','test3']
 const str = render(html`<Page title="Test" data="${data}" />`,{Page})
 console.log(str)
+//or
+const props = {
+  title:"Test",
+  data
+}
+const com = new Page()
+const res = com.render(props)
+console.log(res)
 ```
 
 

@@ -7,14 +7,18 @@
  * @copyright uking 2024
  * @license MIT
  */
-const html = (strings, ...values) => ({ strings, values })
-// const reservedKeys = ['Template', 'Slot']
+
+const reservedKeys = ['Template', 'Slot']
+const componentNameRegExp = /<([A-Z]\w*)/g
+
+
 
 class Component {
-    constructor(props) {
-        this.props = props
+    constructor(context = {}) {
+        this.context = context || {}
+        // this.isCache = false
         let name = this.constructor.name
-        if (['Template', 'Slot'].includes(name)) {
+        if (reservedKeys.includes(name)) {
             throw new Error(`Component ${name} is a reserved keyword.`)
         }
 
@@ -27,20 +31,25 @@ class Component {
     }
 }
 
-// const pattern = /<(?!Slot|Template)([A-Z][A-Za-z]*)/g
-const componentNameRegExp = /<([A-Z]\w*)/g
-const render = (node, components, slots) => {
-    let { strings, values } = node
-    if (!strings) return ''
-    return _renderToString(strings, values, components, slots)
+const html = (strings, ...values) => ({strings, values})
+
+
+const render = (node, components, slots, context) => {
+    let {strings, values} = node
+    let sLen = strings.length
+    let vLen = values.length
+    if (!Array.isArray(values) || !Array.isArray(strings)) return ''
+    if (sLen !== vLen + 1) return ''
+    return _renderToString(strings, values, components, slots, context)
 }
 
-function _renderToString(arr, values, components, slots) {
+function _renderToString(arr, values, components, slots, context) {
+    let html = ''
     let strings = arr.slice(0)
     arr = []
-    let html = ''
-    components = components || {}
     slots = slots || {}
+    context = context || {}
+    components = components || {}
     while (strings.length) {
         let matchComponents = strings[0].match(componentNameRegExp)
         if (matchComponents) {
@@ -52,7 +61,7 @@ function _renderToString(arr, values, components, slots) {
                 html += strings[0].substring(0, beginPosition)
                 strings[0] = strings[0].substring(beginPosition + matchComponents[j].length)
                 let endTagOffset = -1
-                let { props, currentIndex, endTagPosition, isCloseTag } = findComponentAttributes(strings, values)
+                let {props, currentIndex, endTagPosition, isCloseTag} = findComponentAttributes(strings, values)
                 if (isCloseTag) {
                     endTagOffset = endTagPosition + 2
                     if (componentName === 'Slot') {
@@ -64,22 +73,22 @@ function _renderToString(arr, values, components, slots) {
                             slots['default'] = ''
                         }
                     } else
-                        html += _renderComponent(componentName, components, props, slots)
+                        html += _renderComponent(componentName, props, components, slots, context)
 
                 } else {
                     strings[currentIndex] = strings[currentIndex].substring(endTagPosition + 1)
                     strings.splice(0, currentIndex)
                     values.splice(0, currentIndex)
                     let componentEndTag = `</${componentName}>`
-                    let { index, offset, length } = findComponentEndTagPosition(componentEndTag, strings)
+                    let {index, offset, length} = findComponentEndTagPosition(componentEndTag, strings)
                     let arr = strings.slice(0, index + 1)
                     let val = values.slice(0, index)
                     arr[index] = arr[index].substring(0, offset)
                     currentIndex = index
                     endTagOffset = offset + componentEndTag.length
                     let slotName = props.slot || 'default'
-                    slots[slotName] = _renderToString(arr, val, components, slots)
-                    if (componentName !== 'Template') html += _renderComponent(componentName, components, props, slots)
+                    slots[slotName] = _renderToString(arr, val, components, slots, context)
+                    if (componentName !== 'Template') html += _renderComponent(componentName, props, components, slots, context)
                     j += length
                 }
                 strings[currentIndex] = strings[currentIndex].substring(endTagOffset)
@@ -104,11 +113,11 @@ function _renderToString(arr, values, components, slots) {
     return html
 }
 
-function _renderComponent(name, components, props, slots) {
+function _renderComponent(name, props, components, slots, context) {
     let MyComponent = components[name]
     if (!MyComponent) throw new Error(`Component ${name} not found.`)
-    let myComponent = new MyComponent()
-    return render(myComponent.render(props), myComponent.components(), slots)
+    let myComponent = new MyComponent(context)
+    return render(myComponent.render(props), myComponent.components(), slots, myComponent.context)
 }
 
 function findComponentEndTagPosition(componentName, strings) {
@@ -137,7 +146,7 @@ function findComponentEndTagPosition(componentName, strings) {
 
         if (flag) break
     }
-    return { index, offset, length }
+    return {index, offset, length}
 }
 
 function findComponentAttributes(strings, values) {
@@ -166,7 +175,7 @@ function findComponentAttributes(strings, values) {
             attrKey && !props[attrKey] && (props[attrKey] = values[i])
         }
     }
-    return { props, currentIndex, endTagPosition, isCloseTag }
+    return {props, currentIndex, endTagPosition, isCloseTag}
 }
 
 /**
@@ -175,7 +184,8 @@ function findComponentAttributes(strings, values) {
  * @param props
  * @returns {{}}
  */
-function getStaticAttributes(htmlString, props = {}) {
+function getStaticAttributes(htmlString, props ) {
+    props = props || {}
     const regex = /([\w-]+)\s*=\s*(['"])(.*?)\2/g;
     let match;
     while ((match = regex.exec(htmlString))) {
@@ -202,8 +212,8 @@ function getDynamicAttributesKey(htmlString) {
  * @param props
  * @returns {Object}
  */
-function getBooleanAttributes(htmlString, props = {}) {
-
+function getBooleanAttributes(htmlString, props ) {
+    props = props || {}
     const regex = /(^|\s)(\w+)(?=\s|$)/g
     let match;
     while ((match = regex.exec(htmlString))) {
