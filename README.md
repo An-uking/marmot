@@ -16,6 +16,7 @@ const {html,Component,render} = require('@uking/marmot')
 
 class Layout extends Component {
   render({title}){
+    console.log(this.context)
     return html`
       <!DOCTYPE html>
       <html lang="en">
@@ -69,6 +70,23 @@ const props = {
 const com = new Page()
 const res = com.render(props)
 console.log(res)
+
+// with context
+
+const ctx = {
+  a:1,
+  b:2
+}
+const str2 = render(html`<Page title="Test" data="${data}" />`,{Page},null,ctx)
+console.log(str)
+
+// or
+
+const com2 = new Page(ctx)
+const res2 = com.render(props)
+console.log(res)
+
+
 ```
 
 
