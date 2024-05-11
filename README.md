@@ -2,12 +2,12 @@
 
 A lightweight and fast javascript native template rendering engine that supports browsers, FibJS and NodeJS.
 
-### Note
+### Tips
 
 1. Component name must start with a capital letter
 2. Component name can not be Template or Slot
 
-### usage
+### Usage
 
 
 
