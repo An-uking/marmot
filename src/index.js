@@ -2,7 +2,7 @@
  * [@uking/marmot]{@link https://github.com/An-uking/marmot.git}
  *
  * @namespace marmot
- * @version 1.1.4
+ * @version 1.1.5
  * @author uking [ptvile@live.com]
  * @copyright uking 2024
  * @license MIT
@@ -101,7 +101,7 @@ function _renderToString(arr, values, components, slots, context) {
             html += strings[0]
             if (values[0]) {
                 if (Array.isArray(values[0])) {
-                    html += values[0].join('')
+                    html += values[0].join('').replace(/\n\s+/g, '')
                 } else {
                     html += values[0]
                 }

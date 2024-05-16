@@ -9,7 +9,7 @@ A lightweight and fast javascript native template rendering engine that supports
 
 ### Usage
 
-
+请重试！
 
 ```javascript
 const {html,Component,render} = require('@uking/marmot')
